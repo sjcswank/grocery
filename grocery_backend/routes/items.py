@@ -1,11 +1,9 @@
 from flask import Flask, request, jsonify, Blueprint
-from flask_cors import cross_origin
 import sqlite3
 from datetime import datetime
 from ..config import DB_PATH
 
 
-# DB_PATH = "grocery_backend/grocery.db"
 items_bp = Blueprint('items', __name__)
 
 

@@ -37,7 +37,7 @@ export default function GroceryListApp() {
       const [itemsRes, previousRes, suggestedRes] = await Promise.all([
         fetch(`${API_URL}/items`),
         fetch(`${API_URL}/previous`),
-        fetch(`${API_URL}/suggested`)
+        fetch(`${API_URL}/suggestions`)
       ]);
       
       if (!itemsRes.ok || !previousRes.ok || !suggestedRes) {
@@ -80,7 +80,7 @@ export default function GroceryListApp() {
       const previousRes = await fetch(`${API_URL}/previous`);
       const previous = await previousRes.json();
       setPreviousItems(previous);
-      const suggestedRes = await fetch(`${API_URL}/suggested`);
+      const suggestedRes = await fetch(`${API_URL}/suggestions`);
       const suggested = await suggestedRes.json();
       setSuggestedItems(suggested);
     } catch (err) {
@@ -133,7 +133,7 @@ export default function GroceryListApp() {
       const previousRes = await fetch(`${API_URL}/previous`);
       const previous = await previousRes.json();
       setPreviousItems(previous);
-      const suggestedRes = await fetch(`${API_URL}/suggested`);
+      const suggestedRes = await fetch(`${API_URL}/suggestions`);
       const suggested = await suggestedRes.json();
       setSuggestedItems(suggested);
     } catch (err) {
