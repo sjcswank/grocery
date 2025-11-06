@@ -3,11 +3,12 @@ import sqlite3
 from datetime import datetime
 from . import create_app
 from .config import DB_PATH, DEBUG, PORT
-from .models import items
+from .models import items, users
 
 
 def init_db():
     items.create_table()
+    users.create_table()
 
 
 # Create DB

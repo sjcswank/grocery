@@ -5,14 +5,11 @@ def create_table():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS items (
+        CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        owner_id INTEGER NOT NULL,
-        name TEXT NOT NULL UNIQUE,
-        current INTEGER DEFAULT 0,
-        bought INTEGER DEFAULT 0,
-        total_purchases INTEGER DEFAULT 0,
-        last_purchase_date TIMESTAMP,
+        username TEXT NOT NULL UNIQUE,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
         created_at TIMESTAMP
         )
     """

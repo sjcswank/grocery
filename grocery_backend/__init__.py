@@ -12,12 +12,14 @@ def create_app():
     from .routes.items import items_bp
     from .routes.previous import previous_bp
     from .routes.suggestions import suggestions_bp
+    from .routes.auth import auth_bp
 
     # Register all with the same prefix
     blueprints = [
         (items_bp, '/items'),
         (previous_bp, '/previous'),
-        (suggestions_bp, '/suggestions')
+        (suggestions_bp, '/suggestions'),
+        (auth_bp, '/auth')
     ]
     
     for blueprint, path in blueprints:

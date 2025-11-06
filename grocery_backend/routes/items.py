@@ -9,10 +9,11 @@ items_bp = Blueprint('items', __name__)
 
 @items_bp.route("/", methods=["GET"])
 def get_items():
+    data = request.json
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute("SELECT id, name, bought FROM items WHERE current = 1")
+    c.execute("SELECT id, name, bought FROM items WHERE owner_id = ? AND current = 1", (data["id"],))
     items = [
         {"id": row[0], "name": row[1], "bought": bool(row[2])} for row in c.fetchall()
     ]
@@ -40,8 +41,8 @@ def add_item():
     else:
         try:
             c.execute(
-                "INSERT INTO items (name, current, created_at) VALUES (?, ?, ?)",
-                (data["name"], 1, datetime.now()),
+                "INSERT INTO items (name, current, created_at, owner_id) VALUES (?, ?, ?, ?)",
+                (data["name"], 1, datetime.now(), data["user_id"]),
             )
             item_id = c.lastrowid
             conn.commit()

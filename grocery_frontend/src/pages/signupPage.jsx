@@ -1,0 +1,79 @@
+import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
+const API_URL = 'http://localhost:5000/api';
+
+function SignupPage() {
+  const navigate = useNavigate();
+  const { isAuthenticated, login, logout } = useAuth();
+  const [usernameValue, setUserName] = useState('');
+  const [emailValue, setUserEmail] = useState('');
+  const [passwordValue, setUserPasword] = useState('');
+
+
+  const addUser = async (username, email, password) => {
+
+    try {
+    const response = await fetch(`${API_URL}/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({username: username, email: email, password: password})
+    });
+
+    if (!response.ok) throw new Error('Failed to create user.');
+
+    const newUser = await response.json();
+
+    login(newUser);
+
+    setUserName('');
+    setUserEmail('');
+    setUserPasword('');
+
+    navigate('/');
+  } catch (err) {
+    console.log(err.Error);
+  }
+}
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={usernameValue}
+          onChange={(e) => setUserName(e.target.value)}
+          placeholder="Username"
+          className="flex-1 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
+        />
+        <input
+          type="text"
+          value={emailValue}
+          onChange={(e) => setUserEmail(e.target.value)}
+          placeholder="Email"
+          className="flex-1 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
+        />
+        <input
+          type="text"
+          value={passwordValue}
+          onChange={(e) => setUserPasword(e.target.value)}
+          placeholder="Password"
+          className="flex-1 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
+        />
+
+        <button
+          onClick={() => addUser(usernameValue, emailValue, passwordValue)}
+          className="px-4 py-2 bg-neutral-800 text-white rounded-md hover:bg-neutral-700 transition-colors"
+        >
+          <Plus size={20} />
+        </button>
+      </div>
+    </div>
+    );
+  }
+export default SignupPage;
+
+
+        
