@@ -6,6 +6,7 @@ const API_URL = 'http://localhost:5000/api';
 export default function GroceryListApp() {
   const [currentList, setCurrentList] = useState([]);
   const [previousItems, setPreviousItems] = useState([]);
+  const [suggestedItems, setSuggestedItems] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,19 +18,13 @@ export default function GroceryListApp() {
   //      {"id": 12. "name": "Grapes", "bought": False}
   //    ],
   //   "previousItems": [
-  //      {"name": "Milk", "bought_date": 2025-11-4-8:56:00},
-  //      {"name": "Eggs", "bought_date": 2025-11-4-8:55:00},
-  //      {"name": "Bread", "bought_date": 2025-11-4-8:54:00}
+  //      {"id": 09, "name": "Milk", "bought_date": 2025-11-4-8:56:00},
+  //      {"id": 08, "name": "Eggs", "bought_date": 2025-11-4-8:55:00},
+  //      {"id": 07, "name": "Bread", "bought_date": 2025-11-4-8:54:00}
   //    ],
   //   "inputValue": '',
   //   "loading": true,
   //   "error": null
-
-  
-  const suggestedItems = [
-    'Bananas', 'Chicken', 'Rice', 'Tomatoes', 'Cheese',
-    'Yogurt', 'Pasta', 'Onions', 'Carrots', 'Coffee'
-  ];
 
   // Fetch data on component mount
   useEffect(() => {
@@ -39,20 +34,22 @@ export default function GroceryListApp() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [itemsRes, previousRes] = await Promise.all([
+      const [itemsRes, previousRes, suggestedRes] = await Promise.all([
         fetch(`${API_URL}/items`),
-        fetch(`${API_URL}/previous`)
+        fetch(`${API_URL}/previous`),
+        fetch(`${API_URL}/suggested`)
       ]);
       
-      if (!itemsRes.ok || !previousRes.ok) {
+      if (!itemsRes.ok || !previousRes.ok || !suggestedRes) {
         throw new Error('Failed to fetch data');
       }
       
       const items = await itemsRes.json();
       const previous = await previousRes.json();
-      
+      const suggested = await suggestedRes.json();
       setCurrentList(items);
       setPreviousItems(previous);
+      setSuggestedItems(suggested);
       setError(null);
     } catch (err) {
       setError('Failed to load data. Make sure the backend server is running.');
@@ -79,9 +76,13 @@ export default function GroceryListApp() {
       const newItem = await response.json();
       setCurrentList([...currentList, newItem]);
       setInputValue('');
+      // Refresh Data
       const previousRes = await fetch(`${API_URL}/previous`);
       const previous = await previousRes.json();
       setPreviousItems(previous);
+      const suggestedRes = await fetch(`${API_URL}/suggested`);
+      const suggested = await suggestedRes.json();
+      setSuggestedItems(suggested);
     } catch (err) {
       setError('Failed to add item');
       console.error('Error adding item:', err);
@@ -128,12 +129,13 @@ export default function GroceryListApp() {
       
       if (!response.ok) throw new Error('Failed to delete item');
       
-      // Refresh previous items list
-      if (item.bought) {
-        const previousRes = await fetch(`${API_URL}/previous`);
-        const previous = await previousRes.json();
-        setPreviousItems(previous);
-      }
+      // Refresh Data
+      const previousRes = await fetch(`${API_URL}/previous`);
+      const previous = await previousRes.json();
+      setPreviousItems(previous);
+      const suggestedRes = await fetch(`${API_URL}/suggested`);
+      const suggested = await suggestedRes.json();
+      setSuggestedItems(suggested);
     } catch (err) {
       // Revert on error
       setCurrentList([...currentList, item]);

@@ -17,6 +17,7 @@ def init_db():
         name TEXT NOT NULL UNIQUE,
         current INTEGER DEFAULT 0,
         bought INTEGER DEFAULT 0,
+        total_purchases INTEGER DEFAULT 0,
         last_purchase_date TIMESTAMP,
         created_at TIMESTAMP
         )
@@ -35,7 +36,7 @@ def get_items():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute("SELECT id, name, bought FROM items WHERE current = True")
+    c.execute("SELECT id, name, bought FROM items WHERE current = 1")
     items = [
         {"id": row[0], "name": row[1], "bought": bool(row[2])} for row in c.fetchall()
     ]
@@ -54,17 +55,17 @@ def add_item():
     item = c.fetchone()
     if item:
         c.execute(
-            "UPDATE items SET current = ? WHERE id = ?",
-            (True, item[0]),
+            "UPDATE items SET current = 1, bought = 0 WHERE id = ?",
+            (item[0],),
         )
         conn.commit()
         item_id = item[0]
         print("updated item")
-        
+
     try:
         c.execute(
             "INSERT INTO items (name, current, created_at) VALUES (?, ?, ?)",
-            (data["name"], True, datetime.now()),
+            (data["name"], 1, datetime.now()),
         )
         item_id = c.lastrowid
         conn.commit()
@@ -83,10 +84,10 @@ def toggle_bought(item_id):
 
     c.execute("""
         UPDATE items
-        SET bought = ?, last_purchase_date = ?
+        SET bought = ?
         WHERE id = ?
     """, 
-        (1 if data['bought'] else 0, datetime.now() if data['bought'] else None, item_id),
+        (1 if data['bought'] else 0, item_id),
     )
     conn.commit()
     conn.close()
@@ -100,10 +101,16 @@ def delete_item(item_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute('SELECT name, bought FROM items WHERE id = ?', (item_id,))
+    c.execute('SELECT name, bought, total_purchases FROM items WHERE id = ?', (item_id,))
     result = c.fetchone()
 
     if result and result[1]:
+        c.execute("""
+            UPDATE items
+            SET current = 0, total_purchases = ?, last_purchase_date = ?
+            WHERE id =?
+        """, (result[2] + 1, datetime.now(), item_id))
+    elif result:
         c.execute("""
             UPDATE items
             SET current = 0
@@ -117,7 +124,7 @@ def delete_item(item_id):
     return jsonify({'success': True})
 
 
-@app.route('/api/previous')
+@app.route('/api/previous', methods=['GET'])
 def get_previous_items(top_n=10):
 
     conn = sqlite3.connect(DB_PATH)
@@ -126,7 +133,7 @@ def get_previous_items(top_n=10):
     c.execute("""
         SELECT name, last_purchase_date
         FROM items
-        WHERE current = 0
+        WHERE total_purchases > 0
         ORDER BY last_purchase_date DESC
         LIMIT ?
     """,
@@ -136,6 +143,19 @@ def get_previous_items(top_n=10):
     conn.close()
 
     return jsonify(items)
+
+
+@app.route('/api/suggested', methods=['GET'])
+def get_suggested():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute("SELECT name FROM items WHERE current = 0 AND total_purchases > 0 ORDER BY total_purchases DESC")
+    suggested_list = [row[0] for row in c.fetchall()]
+
+    conn.close()
+
+    return jsonify(suggested_list)
 
 
 if __name__ == '__main__':
