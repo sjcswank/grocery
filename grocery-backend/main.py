@@ -15,16 +15,10 @@ def init_db():
         CREATE TABLE IF NOT EXISTS items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
+        current INTEGER DEFAULT 0,
         bought INTEGER DEFAULT 0,
+        last_purchase_date TIMESTAMP,
         created_at TIMESTAMP
-        )
-    """
-    )
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS previous_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        item_name TEXT NOT NULL,
-        bought_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """
     )
@@ -41,7 +35,7 @@ def get_items():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute("SELECT id, name, bought FROM items")
+    c.execute("SELECT id, name, bought FROM items WHERE current = True")
     items = [
         {"id": row[0], "name": row[1], "bought": bool(row[2])} for row in c.fetchall()
     ]
@@ -56,16 +50,26 @@ def add_item():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    try:
+    c.execute("SELECT id, current FROM items WHERE name = ?", (data["name"],))
+    item = c.fetchone()
+    if item:
         c.execute(
-            "INSERT INTO items (name, created_at) VALUES (?, ?)",
-            (data["name"], datetime.now()),
+            "UPDATE items SET current = ? WHERE id = ?",
+            (True, item[0]),
         )
         conn.commit()
-        print(f"Item '{data["name"]}' added successfully.")
+        item_id = item[0]
+        print("updated item")
+        
+    try:
+        c.execute(
+            "INSERT INTO items (name, current, created_at) VALUES (?, ?, ?)",
+            (data["name"], True, datetime.now()),
+        )
         item_id = c.lastrowid
+        conn.commit()
     except sqlite3.IntegrityError:
-        print(f"Item '{data["name"]}' already exists.")
+        print("Insert failed")
     conn.close()
 
     return jsonify({"id": item_id, "name": data["name"], "bought": False}), 201
@@ -79,10 +83,10 @@ def toggle_bought(item_id):
 
     c.execute("""
         UPDATE items
-        SET bought = ?
+        SET bought = ?, last_purchase_date = ?
         WHERE id = ?
     """, 
-        (1 if data['bought'] else 0, item_id),
+        (1 if data['bought'] else 0, datetime.now() if data['bought'] else None, item_id),
     )
     conn.commit()
     conn.close()
@@ -101,12 +105,12 @@ def delete_item(item_id):
 
     if result and result[1]:
         c.execute("""
-            INSERT OR REPLACE INTO previous_items (item_name, bought_date)
-            VALUES (?, ?)
-        """,
-            (result[0], datetime.now()),
-        )
-    c.execute('DELETE FROM items WHERE id = ?', (item_id,))
+            UPDATE items
+            SET current = 0
+            WHERE id =?
+        """, (item_id,))
+    else:
+        c.execute('DELETE FROM items WHERE id = ?', (item_id,))
     conn.commit()
     conn.close()
 
@@ -120,9 +124,10 @@ def get_previous_items(top_n=10):
     c = conn.cursor()
 
     c.execute("""
-        SELECT item_name, bought_date
-        FROM previous_items
-        ORDER BY bought_date DESC
+        SELECT name, last_purchase_date
+        FROM items
+        WHERE current = 0
+        ORDER BY last_purchase_date DESC
         LIMIT ?
     """,
         (top_n,),

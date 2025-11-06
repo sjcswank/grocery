@@ -79,6 +79,9 @@ export default function GroceryListApp() {
       const newItem = await response.json();
       setCurrentList([...currentList, newItem]);
       setInputValue('');
+      const previousRes = await fetch(`${API_URL}/previous`);
+      const previous = await previousRes.json();
+      setPreviousItems(previous);
     } catch (err) {
       setError('Failed to add item');
       console.error('Error adding item:', err);
