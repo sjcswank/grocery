@@ -1,0 +1,102 @@
+from flask import Flask, request, jsonify, Blueprint
+from flask_cors import cross_origin
+import sqlite3
+from datetime import datetime
+from ..config import DB_PATH
+
+
+# DB_PATH = "grocery_backend/grocery.db"
+items_bp = Blueprint('items', __name__)
+
+
+@items_bp.route("/", methods=["GET"])
+def get_items():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute("SELECT id, name, bought FROM items WHERE current = 1")
+    items = [
+        {"id": row[0], "name": row[1], "bought": bool(row[2])} for row in c.fetchall()
+    ]
+    conn.close()
+
+    return jsonify(items)
+
+
+@items_bp.route("/", methods=["POST"])
+def add_item():
+    data = request.json
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute("SELECT id, current FROM items WHERE name = ?", (data["name"],))
+    item = c.fetchone()
+    if item:
+        c.execute(
+            "UPDATE items SET current = 1, bought = 0 WHERE id = ?",
+            (item[0],),
+        )
+        conn.commit()
+        item_id = item[0]
+        print("updated item")
+    else:
+        try:
+            c.execute(
+                "INSERT INTO items (name, current, created_at) VALUES (?, ?, ?)",
+                (data["name"], 1, datetime.now()),
+            )
+            item_id = c.lastrowid
+            conn.commit()
+        except sqlite3.IntegrityError:
+            print("Insert failed")
+    conn.close()
+
+    return jsonify({"id": item_id, "name": data["name"], "bought": False}), 201
+
+
+@items_bp.route("/<int:item_id>", methods=["PATCH"])
+def toggle_bought(item_id):
+    data = request.json
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute("""
+        UPDATE items
+        SET bought = ?
+        WHERE id = ?
+    """, 
+        (1 if data['bought'] else 0, item_id),
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
+
+
+
+@items_bp.route("/<int:item_id>", methods=["DELETE"])
+def delete_item(item_id):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute('SELECT name, bought, total_purchases FROM items WHERE id = ?', (item_id,))
+    result = c.fetchone()
+
+    if result and result[1]:
+        c.execute("""
+            UPDATE items
+            SET current = 0, total_purchases = ?, last_purchase_date = ?
+            WHERE id =?
+        """, (result[2] + 1, datetime.now(), item_id))
+    elif result:
+        c.execute("""
+            UPDATE items
+            SET current = 0
+            WHERE id =?
+        """, (item_id,))
+    else:
+        c.execute('DELETE FROM items WHERE id = ?', (item_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
