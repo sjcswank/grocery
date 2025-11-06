@@ -2,6 +2,8 @@
 This is a simple app for creating and updating a grocery list. The app began as a simple Python app with a SQLite3 database. There are several possible enhancements planned for this app, including:
 - [X] Add a simple frontend to add, remove, and display items on the list [(11/4/2025)](https://github.com/sjcswank/grocery/commit/9f684fb3e1634a5c87020b29d802a3a42711b1a0)
 - [X] Add a 'smart' feature to track previous purchases and suggest common items missing from the current list [(11/6/2025)](https://github.com/sjcswank/grocery/commit/d6d642e96ba7f570a50202e410a4322a80784a68)
+- [ ] Add user accounts for multiple users
+- [ ] Add the ability to assign multiple users to a list as contributors
 - [ ] Add the ability to track pricing for each item and overall list budget
 - [ ] Add ability to search a store or a set of stores for a specific product with current prices
 - [ ] Add price comparisons from several stores
