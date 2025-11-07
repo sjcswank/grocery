@@ -5,40 +5,38 @@ import { useNavigate } from 'react-router-dom';
 
 const API_URL = 'http://localhost:5000/api';
 
-function SignupPage() {
+function LoginPage() {
   const navigate = useNavigate();
   const { isAuthenticated, login } = useAuth();
   const [usernameValue, setUserName] = useState('');
-  const [emailValue, setUserEmail] = useState('');
   const [passwordValue, setUserPasword] = useState('');
 
 
-  const addUser = async (username, email, password) => {
+  const loginUser = async (username, password) => {
 
-  try {
-    const response = await fetch(`${API_URL}/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({username: username, email: email, password: password})
-    });
+    try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({username: username, password: password})
+        });
 
-    if (!response.ok) throw new Error('Failed to create user.');
+        if (!response.ok) throw new Error('Failed to login.');
 
-    const newUser = await response.json();
-    console.log(newUser);
+        const user = await response.json();
+        console.log(user);
 
-    login(newUser);
-    console.log(isAuthenticated);
+        login(user);
+        console.log(isAuthenticated);
 
-    setUserName('');
-    setUserEmail('');
-    setUserPasword('');
+        setUserName('');
+        setUserPasword('');
 
-    navigate('/');
-  } catch (err) {
-    console.log(err.Error);
-  }
-}
+        navigate('/');
+    } catch (err) {
+        console.log(err.Error);
+    }
+    }
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
@@ -52,13 +50,6 @@ function SignupPage() {
         />
         <input
           type="text"
-          value={emailValue}
-          onChange={(e) => setUserEmail(e.target.value)}
-          placeholder="Email"
-          className="flex-1 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
-        />
-        <input
-          type="text"
           value={passwordValue}
           onChange={(e) => setUserPasword(e.target.value)}
           placeholder="Password"
@@ -66,7 +57,7 @@ function SignupPage() {
         />
 
         <button
-          onClick={() => addUser(usernameValue, emailValue, passwordValue)}
+          onClick={() => loginUser(usernameValue, passwordValue)}
           className="px-4 py-2 bg-neutral-800 text-white rounded-md hover:bg-neutral-700 transition-colors"
         >
           <Plus size={20} />
@@ -75,7 +66,7 @@ function SignupPage() {
     </div>
     );
   }
-export default SignupPage;
+export default LoginPage;
 
 
         

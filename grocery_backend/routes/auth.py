@@ -30,3 +30,17 @@ def add_user():
 
     return jsonify({"id": user_id, "username": data['username'], "email": data['email']})
 
+@auth_bp.route("/login", methods=["POST"])
+def login_user():
+    data = request.json
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute("SELECT id, username, email FROM users WHERE username = ? AND password = ?", (data["username"], data["password"]))
+    user = c.fetchone()
+    conn.close()
+
+    if user:
+        return jsonify({"id": user[0], "username": user[1], "email": user[2]})
+    else:
+        return 'User does not exist.'
