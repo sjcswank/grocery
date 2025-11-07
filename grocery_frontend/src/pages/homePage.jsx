@@ -18,23 +18,34 @@ function HomePage() {
     }, []);
 
     const fetchData = async () => {
-        try {
+        try {           
             const [itemsRes, previousRes, suggestedRes] = await Promise.all([
             fetch(`${API_URL}/items`, {
                 method: 'GET',
                 headers: {
-                'Content-Type': 'application/json',
+                    'Content-Type': 'application/json',
+                    'userId': user.id
                 },
-                body: JSON.stringify({
-                userId: user.id
-                }),
+            })
+            ,
+            fetch(`${API_URL}/previous`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'userId': user.id
+                },
             }),
-            fetch(`${API_URL}/previous`),
-            fetch(`${API_URL}/suggestions`)
+            fetch(`${API_URL}/suggestions`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'userId': user.id
+                },
+            })
             ]);
-            
+
             if (!itemsRes.ok || !previousRes.ok || !suggestedRes.ok) {
-            throw new Error('Failed to fetch data');
+                throw new Error('Failed to fetch data');
             }
             
             const items = await itemsRes.json();
@@ -48,7 +59,8 @@ function HomePage() {
 
         }
         catch (err) {
-            setError('Failed to fetch data.')
+            console.log(err);
+            setError('Failed to fetch data.');
         }
     };
 
@@ -61,21 +73,12 @@ function HomePage() {
             const response = await fetch(`${API_URL}/items`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: itemName.trim(), user_id: user.id })
+                body: JSON.stringify({ name: itemName.trim(), userId: user.id })
             });
             
             if (!response.ok) throw new Error('Failed to add item');
-            
-            const newItem = await response.json();
-            setCurrentList([...currentList, newItem]);
             setInputValue('');
-            // Refresh Data
-            const previousRes = await fetch(`${API_URL}/previous`);
-            const previous = await previousRes.json();
-            setPreviousItems(previous);
-            const suggestedRes = await fetch(`${API_URL}/suggestions`);
-            const suggested = await suggestedRes.json();
-            setSuggestedItems(suggested);
+            fetchData();
         } catch (err) {
         setError('Failed to add item');
         console.error('Error adding item:', err);
@@ -121,14 +124,7 @@ function HomePage() {
       });
       
       if (!response.ok) throw new Error('Failed to delete item');
-      
-      // Refresh Data
-      const previousRes = await fetch(`${API_URL}/previous`);
-      const previous = await previousRes.json();
-      setPreviousItems(previous);
-      const suggestedRes = await fetch(`${API_URL}/suggestions`);
-      const suggested = await suggestedRes.json();
-      setSuggestedItems(suggested);
+      fetchData();
     } catch (err) {
       // Revert on error
       setCurrentList([...currentList, item]);
@@ -137,7 +133,7 @@ function HomePage() {
     }
   };
 
-  if (!isAuthenticated) {
+  if (false) {
     setError('You must be logged in to see this page')
     return (
         <div>

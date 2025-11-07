@@ -8,7 +8,8 @@ def create_table():
         CREATE TABLE IF NOT EXISTS items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         owner_id INTEGER NOT NULL,
-        name TEXT NOT NULL UNIQUE,
+        contributors TEXT,
+        name TEXT NOT NULL,
         current INTEGER DEFAULT 0,
         bought INTEGER DEFAULT 0,
         total_purchases INTEGER DEFAULT 0,
