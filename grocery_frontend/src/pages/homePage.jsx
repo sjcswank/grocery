@@ -11,6 +11,8 @@ function HomePage() {
     const [previousItems, setPreviousItems] = useState([]);
     const [suggestedItems, setSuggestedItems] = useState([]);
     const [inputValue, setInputValue] = useState('');
+    const [loading, setLoading] = useState(false);
+    setError(null);
 
     // Fetch data on component mount
     useEffect(() => {
@@ -18,6 +20,7 @@ function HomePage() {
     }, []);
 
     const fetchData = async () => {
+        setLoading(true);
         try {           
             const [itemsRes, previousRes, suggestedRes] = await Promise.all([
             fetch(`${API_URL}/items`, {
@@ -62,6 +65,9 @@ function HomePage() {
             console.log(err);
             setError('Failed to fetch data.');
         }
+        finally {
+            setLoading(false);
+        }
     };
 
     const addItem = async (itemName) => {
@@ -81,7 +87,6 @@ function HomePage() {
             fetchData();
         } catch (err) {
         setError('Failed to add item');
-        console.error('Error adding item:', err);
         }
   };
 
@@ -108,7 +113,6 @@ function HomePage() {
         item.id === id ? { ...item, bought: !newBoughtStatus } : item
       ));
       setError('Failed to update item');
-      console.error('Error updating item:', err);
     }
   };
 
@@ -129,38 +133,40 @@ function HomePage() {
       // Revert on error
       setCurrentList([...currentList, item]);
       setError('Failed to delete item');
-      console.error('Error deleting item:', err);
     }
   };
 
-  if (false) {
-    setError('You must be logged in to see this page')
+  if (!isAuthenticated) {
+    setError('You must be logged in to see this page.')
     return (
         <div>
-            <a href="/login">Login</a>
-            <a href="/signup">Signup</a>
         </div>
     )
   }
   else {
     return (
         <div>
+            {loading ? (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg mb-6">
+              Loading...
+            </div>
+            ) : (<div>
             <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
                 <div className="flex gap-2">
-                <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && addItem(inputValue)}
-                    placeholder="Add an item..."
-                    className="flex-1 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
-                />
-                <button
-                    onClick={() => addItem(inputValue)}
-                    className="px-4 py-2 bg-neutral-800 text-white rounded-md hover:bg-neutral-700 transition-colors"
-                >
-                    <Plus size={20} />
-                </button>
+                    <input
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && addItem(inputValue)}
+                        placeholder="Add an item..."
+                        className="flex-1 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
+                    />
+                    <button
+                        onClick={() => addItem(inputValue)}
+                        className="px-4 py-2 bg-neutral-800 text-white rounded-md hover:bg-neutral-700 transition-colors"
+                    >
+                        <Plus size={20} />
+                    </button>
                 </div>
             </div>
 
@@ -236,5 +242,6 @@ function HomePage() {
             )}
         </div>
     )}
+    </div>)}
 }
 export default HomePage;

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,9 +6,10 @@ const API_URL = 'http://localhost:5000/api';
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
+  const { login, setError } = useAuth();
   const [usernameValue, setUserName] = useState('');
   const [passwordValue, setUserPasword] = useState('');
+  setError(null);
 
 
   const loginUser = async (username, password) => {
@@ -24,11 +24,8 @@ function LoginPage() {
         if (!response.ok) throw new Error('Failed to login.');
 
         const user = await response.json();
-        console.log(user);
 
         login(user);
-        console.log(isAuthenticated);
-
         setUserName('');
         setUserPasword('');
 
@@ -36,7 +33,7 @@ function LoginPage() {
     } catch (err) {
         console.log(err.Error);
     }
-    }
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
@@ -60,7 +57,7 @@ function LoginPage() {
           onClick={() => loginUser(usernameValue, passwordValue)}
           className="px-4 py-2 bg-neutral-800 text-white rounded-md hover:bg-neutral-700 transition-colors"
         >
-          <Plus size={20} />
+          Login
         </button>
       </div>
     </div>

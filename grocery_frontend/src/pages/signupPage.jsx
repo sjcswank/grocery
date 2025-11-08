@@ -7,37 +7,35 @@ const API_URL = 'http://localhost:5000/api';
 
 function SignupPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
+  const { login, setError } = useAuth();
   const [usernameValue, setUserName] = useState('');
   const [emailValue, setUserEmail] = useState('');
   const [passwordValue, setUserPasword] = useState('');
+  setError(null);
 
 
   const addUser = async (username, email, password) => {
+    try {
+      const response = await fetch(`${API_URL}/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({username: username, email: email, password: password})
+      });
 
-  try {
-    const response = await fetch(`${API_URL}/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({username: username, email: email, password: password})
-    });
+      if (!response.ok) throw new Error('Failed to create user.');
 
-    if (!response.ok) throw new Error('Failed to create user.');
+      const newUser = await response.json();
 
-    const newUser = await response.json();
-    console.log(newUser);
+      login(newUser);
 
-    login(newUser);
-    console.log(isAuthenticated);
+      setUserName('');
+      setUserEmail('');
+      setUserPasword('');
 
-    setUserName('');
-    setUserEmail('');
-    setUserPasword('');
-
-    navigate('/');
-  } catch (err) {
-    console.log(err.Error);
-  }
+      navigate('/');
+    } catch (err) {
+      console.log(err.Error);
+    }
 }
 
   return (
@@ -48,21 +46,21 @@ function SignupPage() {
           value={usernameValue}
           onChange={(e) => setUserName(e.target.value)}
           placeholder="Username"
-          className="flex-1 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
+          className="flex-1 w-1/3 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
         />
         <input
           type="text"
           value={emailValue}
           onChange={(e) => setUserEmail(e.target.value)}
           placeholder="Email"
-          className="flex-1 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
+          className="flex-1 w-1/3 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
         />
         <input
           type="text"
           value={passwordValue}
           onChange={(e) => setUserPasword(e.target.value)}
           placeholder="Password"
-          className="flex-1 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
+          className="flex w-1/3-1 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
         />
 
         <button
