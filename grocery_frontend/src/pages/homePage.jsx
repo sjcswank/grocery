@@ -78,8 +78,8 @@ function HomePage() {
         try {
             const response = await fetch(`${API_URL}/items`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: itemName.trim(), userId: user.id })
+                headers: { 'Content-Type': 'application/json', 'userId': user.id },
+                body: JSON.stringify({ name: itemName.trim() })
             });
             
             if (!response.ok) throw new Error('Failed to add item');

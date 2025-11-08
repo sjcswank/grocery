@@ -24,11 +24,12 @@ def get_items():
 
 @items_bp.route("/", methods=["POST"])
 def add_item():
+    userId = request.headers.get("userId")
     data = request.json
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute("SELECT id, current FROM items WHERE name = ? AND owner_id = ?", (data["name"], data["userId"]))
+    c.execute("SELECT id, current FROM items WHERE name = ? AND owner_id = ?", (data["name"], userId))
     item = c.fetchone()
     if item:
         c.execute(
@@ -42,7 +43,7 @@ def add_item():
         try:
             c.execute(
                 "INSERT INTO items (name, current, created_at, owner_id) VALUES (?, ?, ?, ?)",
-                (data["name"], 1, datetime.now(), data["userId"]),
+                (data["name"], 1, datetime.now(), userId),
             )
             item_id = c.lastrowid
             conn.commit()
