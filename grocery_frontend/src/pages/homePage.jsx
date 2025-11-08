@@ -145,7 +145,21 @@ function HomePage() {
   }
   else {
     return (
-        <div>
+        // <div>
+        //     {currentList.map(item => {
+        //         const itemPrices = JSON.parse(item.prices);
+        //         const lowestPrice = Math.min(...itemPrices);
+        //         return (
+        //             <div>
+        //                 <button>bought</button>
+        //                 <span>{item.name}</span>
+        //                 <span>Price: {lowestPrice}</span>
+        //                 <button>Remove</button>
+        //             </div>
+        //         )
+        //     })}
+        // </div>
+<div>
             {loading ? (
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg mb-6">
               Loading...
@@ -176,7 +190,9 @@ function HomePage() {
                 <p className="text-neutral-400 text-center py-8">No items yet. Add some items to get started!</p>
                 ) : (
                 <div className="space-y-2">
-                    {currentList.map(item => (
+                    {currentList.map(item => {
+                        const prices = JSON.parse(item.prices);
+                        return (
                     <div
                         key={item.id}
                         className="flex items-center gap-3 p-3 rounded-md hover:bg-neutral-50 transition-colors"
@@ -194,6 +210,9 @@ function HomePage() {
                         <span className={`flex-1 ${item.bought ? 'line-through text-neutral-400' : 'text-neutral-800'}`}>
                         {item.name}
                         </span>
+                        <span className="flex-1 text-neutral-800">
+                        Price: {Math.min(...prices)}
+                        </span>
                         <button
                         onClick={() => removeItem(item.id)}
                         className="text-neutral-400 hover:text-neutral-600 transition-colors"
@@ -201,9 +220,9 @@ function HomePage() {
                         <X size={18} />
                         </button>
                     </div>
-                    ))}
-                </div>
-                )}
+                        );
+                    })}
+                </div>)}
             </div>
 
             {suggestedItems.length > 0 && (
@@ -242,6 +261,7 @@ function HomePage() {
             )}
         </div>
     )}
-    </div>)}
+    </div>
+    )}     
 }
 export default HomePage;

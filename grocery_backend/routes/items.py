@@ -13,9 +13,9 @@ def get_items():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute("SELECT id, name, bought FROM items WHERE owner_id = ? AND current = 1", (userId,))
+    c.execute("SELECT id, name, bought, prices FROM items WHERE owner_id = ? AND current = 1", (userId,))
     items = [
-        {"id": row[0], "name": row[1], "bought": bool(row[2])} for row in c.fetchall()
+        {"id": row[0], "name": row[1], "bought": bool(row[2]), "prices": row[3]} for row in c.fetchall()
     ]
     conn.close()
 
@@ -26,6 +26,10 @@ def get_items():
 def add_item():
     userId = request.headers.get("userId")
     data = request.json
+
+    #TODO Make call to prices API
+    prices = '[1, 2, 3, 4.5]'
+
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
@@ -33,8 +37,8 @@ def add_item():
     item = c.fetchone()
     if item:
         c.execute(
-            "UPDATE items SET current = 1, bought = 0 WHERE id = ?",
-            (item[0],),
+            "UPDATE items SET current = 1, bought = 0, prices = ? WHERE id = ?",
+            (prices, item[0]),
         )
         conn.commit()
         item_id = item[0]
@@ -42,8 +46,8 @@ def add_item():
     else:
         try:
             c.execute(
-                "INSERT INTO items (name, current, created_at, owner_id) VALUES (?, ?, ?, ?)",
-                (data["name"], 1, datetime.now(), userId),
+                "INSERT INTO items (name, current, created_at, owner_id, prices) VALUES (?, ?, ?, ?, ?)",
+                (data["name"], 1, datetime.now(), userId, prices),
             )
             item_id = c.lastrowid
             conn.commit()
@@ -51,7 +55,7 @@ def add_item():
             print("Insert failed")
     conn.close()
 
-    return jsonify({"id": item_id, "name": data["name"], "bought": False}), 201
+    return jsonify({"id": item_id, "name": data["name"], "bought": False, "prices": prices}), 201
 
 
 @items_bp.route("/<int:item_id>", methods=["PATCH"])

@@ -10,6 +10,7 @@ def create_table():
         owner_id INTEGER NOT NULL,
         contributors TEXT,
         name TEXT NOT NULL,
+        prices TEXT,
         current INTEGER DEFAULT 0,
         bought INTEGER DEFAULT 0,
         total_purchases INTEGER DEFAULT 0,
