@@ -211,7 +211,8 @@ function HomePage() {
                         {item.name}
                         </span>
                         <span className="flex-1 text-neutral-800">
-                        Price: {Math.min(...prices)}
+                        {/* Price: {Math.min(...prices)} */}
+                        Price: {prices}
                         </span>
                         <button
                         onClick={() => removeItem(item.id)}

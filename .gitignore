@@ -1,9 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+/grocery_backend/config.py
 /grocery_backend/grocery.db
 README.React.md
 .venv
 **/__pycache__
+/grocery_backend/services/mealme_api.py
 
 # dependencies
 /grocery_frontend/node_modules

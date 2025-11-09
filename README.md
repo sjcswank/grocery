@@ -4,7 +4,10 @@ This is a simple app for creating and updating a grocery list. The app began as 
 - [X] Add a 'smart' feature to track previous purchases and suggest common items missing from the current list [(11/6/2025)](https://github.com/sjcswank/grocery/commit/d6d642e96ba7f570a50202e410a4322a80784a68)
 - [X] Add user accounts for multiple users [(11/7/2025)](https://github.com/sjcswank/grocery/commit/f7f0c013a14b309033c5ed101a1314f35fbd242e)
 - [ ] Add the ability to assign multiple users to a list as contributors
-- [ ] Add the ability to track pricing for each item and overall list budget
+- [X] Add the ability to track pricing for each item [(11/8/2025)](https://github.com/sjcswank/grocery/commit/4716d0fd1d2886cb2e74b9dca00ce4af6416ef49)
+- [ ] Add overall list budget tracker
+- [ ] Add API calls to find item pricing
+- [ ] Update suggestions to include previous items with lower than usual prices (track previous prices when purchased)
 - [ ] Add ability to search a store or a set of stores for a specific product with current prices
 - [ ] Add price comparisons from several stores
 - [ ] Add ability to select best price and create store specific lists

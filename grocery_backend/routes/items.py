@@ -2,6 +2,9 @@ from flask import Flask, request, jsonify, Blueprint
 import sqlite3
 from datetime import datetime
 from ..config import DB_PATH
+from ..services import mealme_api
+from ..services import kroger_api
+import json
 
 
 items_bp = Blueprint('items', __name__)
@@ -27,8 +30,25 @@ def add_item():
     userId = request.headers.get("userId")
     data = request.json
 
-    #TODO Make call to prices API
-    prices = '[1, 2, 3, 4.5]'
+    # #TODO Make call to prices API
+    token = kroger_api.getToken()
+
+    # location_ids = kroger_api.getLocations('63127', token) # 61500122
+
+    product_data = kroger_api.getProduct(data['name'], '61500122', token)
+
+    info = {
+        'price': product_data['data'][0]['items'][0]['price']['regular'],
+        'fulfillment': product_data['data'][0]['items'][0]['fulfillment'], # {"curbside": true, "delivery": true, "inStore": true, "shipToHome": false},
+        'inventory': product_data['data'][0]['items'][0]['inventory'], # {"stockLevel": "HIGH"},
+        'itemId': product_data['data'][0]['items'][0]['itemId'],
+        'size': product_data['data'][0]['items'][0]['size'],
+        'brand': product_data['data'][0]['brand'],
+        'category': product_data['data'][0]['categories'][0],
+        'description': product_data['data'][0]['description'],
+        'images': product_data['data'][0]['images']
+    }
+    prices = info['price']
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
