@@ -4,6 +4,8 @@ from ..config import DB_PATH
 
 suggestions_bp = (Blueprint('suggestions', __name__))
 
+# TODO: add funct to get current price and compare to average for suggestions
+
 @suggestions_bp.route('/', methods=['GET'])
 def get_suggestions():
     userId = request.headers.get("userId")
@@ -11,7 +13,7 @@ def get_suggestions():
     c = conn.cursor()
 
     c.execute("""
-        SELECT name 
+        SELECT name
         FROM items 
         WHERE owner_id = ? AND current = 0 AND total_purchases > 0 
         ORDER BY total_purchases DESC

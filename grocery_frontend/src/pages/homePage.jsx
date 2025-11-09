@@ -124,7 +124,9 @@ function HomePage() {
 
     try {
       const response = await fetch(`${API_URL}/items/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({price: item.prices})
       });
       
       if (!response.ok) throw new Error('Failed to delete item');

@@ -30,7 +30,7 @@ def add_item():
     userId = request.headers.get("userId")
     data = request.json
 
-    # #TODO Make call to prices API
+    # DONE Make call to prices API
     token = kroger_api.getToken()
 
     # location_ids = kroger_api.getLocations('63127', token) # 61500122
@@ -100,18 +100,27 @@ def toggle_bought(item_id):
 
 @items_bp.route("/<int:item_id>", methods=["DELETE"])
 def delete_item(item_id):
+    data = request.json
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute('SELECT name, bought, total_purchases FROM items WHERE id = ?', (item_id,))
+    c.execute('SELECT name, bought, total_purchases, previous_purchased_prices FROM items WHERE id = ?', (item_id,))
     result = c.fetchone()
 
     if result and result[1]:
+        previous_purchased_prices_string = result[3]
+        try:
+            previous_purchased_prices = json.loads(previous_purchased_prices_string) 
+        except:
+            previous_purchased_prices = []
+        previous_purchased_prices.append(data['price'])
+        updated_previous_prices = json.dumps(previous_purchased_prices)
+
         c.execute("""
             UPDATE items
-            SET current = 0, total_purchases = ?, last_purchase_date = ?, bought = 0
+            SET current = 0, total_purchases = ?, last_purchase_date = ?, bought = 0, previous_purchased_prices = ?
             WHERE id =?
-        """, (result[2] + 1, datetime.now(), item_id))
+        """, (result[2] + 1, datetime.now(), updated_previous_prices, item_id))
     elif result and result[2] > 0:
         c.execute("""
             UPDATE items

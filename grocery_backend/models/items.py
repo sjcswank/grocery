@@ -15,6 +15,7 @@ def create_table():
         bought INTEGER DEFAULT 0,
         total_purchases INTEGER DEFAULT 0,
         last_purchase_date TIMESTAMP,
+        previous_purchased_prices TEXT,
         created_at TIMESTAMP
         )
     """
