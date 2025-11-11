@@ -6,7 +6,7 @@ from .config import ALLOWED_ORIGINS, API_PREFIX
 def create_app():
     app = Flask(__name__)
     app.url_map.strict_slashes = False
-    CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000", "allow_headers": ["Authorization", "Content-Type", "X-Custom-Api-Key", "userId"]}})
+    CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000", "allow_headers": ["Authorization", "Content-Type", "X-Custom-Api-Key", "userId", "firstLoad"]}})
 
     # Import all blueprints
     from .routes.items import items_bp

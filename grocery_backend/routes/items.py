@@ -13,14 +13,35 @@ items_bp = Blueprint('items', __name__)
 @items_bp.route("/", methods=["GET"])
 def get_items():
     userId = request.headers.get("userId")
+    firstLoad = int(request.headers.get("firstLoad"))
+    print(firstLoad)
+
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute("SELECT id, name, bought, prices FROM items WHERE owner_id = ? AND current = 1", (userId,))
+    c.execute("SELECT id, name, bought, price FROM items WHERE owner_id = ? AND current = 1", (userId,))
     items = [
-        {"id": row[0], "name": row[1], "bought": bool(row[2]), "prices": row[3]} for row in c.fetchall()
+        {"id": row[0], "name": row[1], "bought": bool(row[2]), "price": row[3]} for row in c.fetchall()
     ]
     conn.close()
+
+    if firstLoad:
+        for item in items:
+            token = kroger_api.getToken()
+            product_data = kroger_api.getProduct(item["name"], '61500122', token)
+
+            products = []
+            for product in product_data['data']:
+                info = {
+                    'description': product['description'],
+                    'price': product['items'][0]['price']['regular'],
+                    'images': product['images'],
+                    'itemId': product['items'][0]['itemId']
+                }
+                products.append(info)
+            sorted_by_price = sorted(products, key=lambda x: x['price'])
+            item['price'] = sorted_by_price[0]['price']
+            item['name'] = sorted_by_price[0]['description']
 
     return jsonify(items)
 
@@ -37,37 +58,43 @@ def add_item():
 
     product_data = kroger_api.getProduct(data['name'], '61500122', token)
 
-    info = {
-        'price': product_data['data'][0]['items'][0]['price']['regular'],
-        'fulfillment': product_data['data'][0]['items'][0]['fulfillment'], # {"curbside": true, "delivery": true, "inStore": true, "shipToHome": false},
-        'inventory': product_data['data'][0]['items'][0]['inventory'], # {"stockLevel": "HIGH"},
-        'itemId': product_data['data'][0]['items'][0]['itemId'],
-        'size': product_data['data'][0]['items'][0]['size'],
-        'brand': product_data['data'][0]['brand'],
-        'category': product_data['data'][0]['categories'][0],
-        'description': product_data['data'][0]['description'],
-        'images': product_data['data'][0]['images']
-    }
-    prices = info['price']
+    items = []
+    for item in product_data['data']:
+        info = {
+            'description': item['description'],
+            'price': item['items'][0]['price']['regular'],
+            'images': item['images'],
+            'itemId': item['items'][0]['itemId']
+        }
+        items.append(info)
+    sorted_by_price = sorted(items, key=lambda x: x['price'])
+
+    # info = {
+    #     # 'fulfillment': product_data['data'][0]['items'][0]['fulfillment'], # {"curbside": true, "delivery": true, "inStore": true, "shipToHome": false},
+    #     # 'inventory': product_data['data'][0]['items'][0]['inventory'], # {"stockLevel": "HIGH"},
+    #     # 'itemId': product_data['data'][0]['items'][0]['itemId'],
+    #     # 'size': product_data['data'][0]['items'][0]['size'],
+    #     # 'brand': product_data['data'][0]['brand'],
+    #     # 'category': product_data['data'][0]['categories'][0],
+    # }
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute("SELECT id, current FROM items WHERE name = ? AND owner_id = ?", (data["name"], userId))
+    c.execute("SELECT id, current FROM items WHERE name = ? AND owner_id = ?", (sorted_by_price[0]['description'], userId))
     item = c.fetchone()
     if item:
         c.execute(
-            "UPDATE items SET current = 1, bought = 0, prices = ? WHERE id = ?",
-            (prices, item[0]),
+            "UPDATE items SET current = 1, bought = 0, price = ?, name = ? WHERE id = ?",
+            (sorted_by_price[0]['price'], sorted_by_price[0]['description'], item[0]),
         )
         conn.commit()
         item_id = item[0]
-        print("updated item")
     else:
         try:
             c.execute(
-                "INSERT INTO items (name, current, created_at, owner_id, prices) VALUES (?, ?, ?, ?, ?)",
-                (data["name"], 1, datetime.now(), userId, prices),
+                "INSERT INTO items (name, current, created_at, owner_id, price) VALUES (?, ?, ?, ?, ?)",
+                (sorted_by_price[0]['description'], 1, datetime.now(), userId, sorted_by_price[0]['price']),
             )
             item_id = c.lastrowid
             conn.commit()
@@ -75,7 +102,7 @@ def add_item():
             print("Insert failed")
     conn.close()
 
-    return jsonify({"id": item_id, "name": data["name"], "bought": False, "prices": prices}), 201
+    return jsonify({"id": item_id, "name": sorted_by_price[0]['description'], "bought": False, "price": sorted_by_price[0]['price']}), 201
 
 
 @items_bp.route("/<int:item_id>", methods=["PATCH"])

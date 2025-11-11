@@ -16,10 +16,10 @@ function HomePage() {
 
     // Fetch data on component mount
     useEffect(() => {
-        fetchData();
+        fetchData(1);
     }, []);
 
-    const fetchData = async () => {
+    const fetchData = async (firstLoad) => {
         setLoading(true);
         try {           
             const [itemsRes, previousRes, suggestedRes] = await Promise.all([
@@ -27,7 +27,8 @@ function HomePage() {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'userId': user.id
+                    'userId': user.id,
+                    'firstLoad': firstLoad
                 },
             })
             ,
@@ -71,23 +72,26 @@ function HomePage() {
     };
 
     const addItem = async (itemName) => {
+        setLoading(true);
         if (!itemName.trim() || currentList.find(item => item.name.toLowerCase() === itemName.toLowerCase())) {
-        return;
         }
-
-        try {
-            const response = await fetch(`${API_URL}/items`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'userId': user.id },
-                body: JSON.stringify({ name: itemName.trim() })
-            });
-            
-            if (!response.ok) throw new Error('Failed to add item');
-            setInputValue('');
-            fetchData();
-        } catch (err) {
-        setError('Failed to add item');
+        else {
+            try {
+                const response = await fetch(`${API_URL}/items`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'userId': user.id, },
+                    body: JSON.stringify({ name: itemName.trim() })
+                });
+                
+                if (!response.ok) throw new Error('Failed to add item');
+            } catch (err) {
+            setError('Failed to add item');
+            }
         }
+        setInputValue('');
+        //TODO: Update to add item to currentItems, refresh previous, refresh suggested
+        fetchData(0);
+        setLoading(false);
   };
 
   const toggleBought = async (id) => {
@@ -117,6 +121,7 @@ function HomePage() {
   };
 
   const removeItem = async (id) => {
+    setLoading(true);
     const item = currentList.find(i => i.id === id);
     
     // Optimistic update
@@ -126,16 +131,17 @@ function HomePage() {
       const response = await fetch(`${API_URL}/items/${id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({price: item.prices})
+        body: JSON.stringify({price: item.price})
       });
       
       if (!response.ok) throw new Error('Failed to delete item');
-      fetchData();
+      fetchData(0);
     } catch (err) {
       // Revert on error
       setCurrentList([...currentList, item]);
       setError('Failed to delete item');
     }
+    setLoading(false);
   };
 
   if (!isAuthenticated) {
@@ -193,7 +199,6 @@ function HomePage() {
                 ) : (
                 <div className="space-y-2">
                     {currentList.map(item => {
-                        const prices = JSON.parse(item.prices);
                         return (
                     <div
                         key={item.id}
@@ -214,7 +219,7 @@ function HomePage() {
                         </span>
                         <span className="flex-1 text-neutral-800">
                         {/* Price: {Math.min(...prices)} */}
-                        Price: {prices}
+                        Price: {item.price}
                         </span>
                         <button
                         onClick={() => removeItem(item.id)}
@@ -233,13 +238,13 @@ function HomePage() {
                 <h2 className="text-lg font-medium text-neutral-700 mb-4">Suggested Items</h2>
                 <div className="flex flex-wrap gap-2">
                 {suggestedItems.map(item => (
-                    <button
-                    key={item}
-                    onClick={() => addItem(item)}
-                    disabled={currentList.some(i => i.name.toLowerCase() === item.toLowerCase())}
-                    className="px-3 py-1.5 bg-neutral-100 text-neutral-700 rounded-full text-sm hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    <button 
+                    key={item.name}
+                    onClick={() => addItem(item.name)}
+                    disabled={currentList.some(i => i.name.toLowerCase() === item.name.toLowerCase())}
+                    className={`px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${item.sale ? 'bg-green-100 text-green-700 text-sm hover:bg-green-200' : 'bg-neutral-100 text-neutral-700 text-sm hover:bg-neutral-200'}`}
                     >
-                    {item}
+                    {item.name}
                     </button>
                 ))}
                 </div>

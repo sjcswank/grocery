@@ -32,7 +32,6 @@ def getLocations(zipCode, token):
     response = requests.get(KROGER_API_BASE_URL + '/locations?' + filters, headers=headers)
     location_data = response.json()
     locations_list = location_data['data']
-    # print(locations_list)
     location_ids = [location['locationId'] for location in locations_list]
 
     return location_ids

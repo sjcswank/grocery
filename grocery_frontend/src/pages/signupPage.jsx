@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -67,7 +66,7 @@ function SignupPage() {
           onClick={() => addUser(usernameValue, emailValue, passwordValue)}
           className="px-4 py-2 bg-neutral-800 text-white rounded-md hover:bg-neutral-700 transition-colors"
         >
-          <Plus size={20} />
+          Signup
         </button>
       </div>
     </div>
