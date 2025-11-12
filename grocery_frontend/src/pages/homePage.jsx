@@ -8,68 +8,56 @@ const API_URL = 'http://localhost:5000/api';
 function HomePage() {
     const { user, isAuthenticated, setError } = useAuth();
     const [currentList, setCurrentList] = useState([]);
-    const [previousItems, setPreviousItems] = useState([]);
-    const [suggestedItems, setSuggestedItems] = useState([]);
+    const [previousList, setPreviousList] = useState([]);
+    const [suggestionsList, setSuggestionsList] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [loading, setLoading] = useState(false);
     setError(null);
 
     // Fetch data on component mount
     useEffect(() => {
-        fetchData(1);
+        //TODO: Refactor so Loading displays while fetching data on first load
+        setLoading(true);
+        try {
+            fetchData('items');
+            fetchData('previous');
+            fetchData('suggestions');
+        }
+        catch (err) {}
+        finally { setLoading(false); }   
     }, []);
 
-    const fetchData = async (firstLoad) => {
-        setLoading(true);
-        try {           
-            const [itemsRes, previousRes, suggestedRes] = await Promise.all([
-            fetch(`${API_URL}/items`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'userId': user.id,
-                    'firstLoad': firstLoad
-                },
-            })
-            ,
-            fetch(`${API_URL}/previous`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'userId': user.id
-                },
-            }),
-            fetch(`${API_URL}/suggestions`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'userId': user.id
-                },
-            })
-            ]);
 
-            if (!itemsRes.ok || !previousRes.ok || !suggestedRes.ok) {
+    const fetchData = async (endPoint) => {
+        try {           
+            const response = await fetch(`${API_URL}/${endPoint}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'userId': user.id
+                },
+            })
+
+            if (!response.ok) {
                 throw new Error('Failed to fetch data');
             }
-            
-            const items = await itemsRes.json();
-            const previous = await previousRes.json();
-            const suggested = await suggestedRes.json();
-            setCurrentList(items);
-            setPreviousItems(previous);
-            setSuggestedItems(suggested);
+            const items = await response.json();
+            if (endPoint === 'items') { setCurrentList(items); }
+            if (endPoint === 'previous') { setPreviousList(items); }
+            if (endPoint === 'suggestions') { setSuggestionsList(items); }
+            else { throw new Error('Incorrect endpoint')}
 
             setError(null);
 
         }
         catch (err) {
-            console.log(err);
-            setError('Failed to fetch data.');
+            console.log(err.message);
+            setError(err.message);
         }
         finally {
-            setLoading(false);
+            setInputValue('');
         }
-    };
+    }
 
     const addItem = async (itemName) => {
         setLoading(true);
@@ -84,13 +72,15 @@ function HomePage() {
                 });
                 
                 if (!response.ok) throw new Error('Failed to add item');
+                //DONE: Add item to current list
+                const item = await response.json();
+                setCurrentList(currentItems => [...currentItems, item]);
+                fetchData('suggestions');
             } catch (err) {
-            setError('Failed to add item');
+                setError('Failed to add item');
             }
         }
         setInputValue('');
-        //TODO: Update to add item to currentItems, refresh previous, refresh suggested
-        fetchData(0);
         setLoading(false);
   };
 
@@ -135,11 +125,12 @@ function HomePage() {
       });
       
       if (!response.ok) throw new Error('Failed to delete item');
-      fetchData(0);
+      fetchData('previous');
+      fetchData('suggestions');
     } catch (err) {
-      // Revert on error
-      setCurrentList([...currentList, item]);
-      setError('Failed to delete item');
+        // Revert on error
+        setCurrentList([...currentList, item]);
+        setError('Failed to delete item');
     }
     setLoading(false);
   };
@@ -153,21 +144,7 @@ function HomePage() {
   }
   else {
     return (
-        // <div>
-        //     {currentList.map(item => {
-        //         const itemPrices = JSON.parse(item.prices);
-        //         const lowestPrice = Math.min(...itemPrices);
-        //         return (
-        //             <div>
-        //                 <button>bought</button>
-        //                 <span>{item.name}</span>
-        //                 <span>Price: {lowestPrice}</span>
-        //                 <button>Remove</button>
-        //             </div>
-        //         )
-        //     })}
-        // </div>
-<div>
+        <div>
             {loading ? (
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg mb-6">
               Loading...
@@ -233,11 +210,11 @@ function HomePage() {
                 </div>)}
             </div>
 
-            {suggestedItems.length > 0 && (
+            {suggestionsList.length > 0 && (
             <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
                 <h2 className="text-lg font-medium text-neutral-700 mb-4">Suggested Items</h2>
                 <div className="flex flex-wrap gap-2">
-                {suggestedItems.map(item => (
+                {suggestionsList.map(item => (
                     <button 
                     key={item.name}
                     onClick={() => addItem(item.name)}
@@ -250,11 +227,11 @@ function HomePage() {
                 </div>
             </div>)}
 
-            {previousItems.length > 0 && (
+            {previousList.length > 0 && (
                 <div className="bg-white rounded-lg shadow-sm p-4">
                     <h2 className="text-lg font-medium text-neutral-700 mb-4">Previously Bought</h2>
                     <div className="flex flex-wrap gap-2">
-                        {previousItems.map(item => (
+                        {previousList.map(item => (
                         <button
                             key={item}
                             onClick={() => addItem(item)}

@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, Blueprint
 import sqlite3
 from datetime import datetime
-from ..config import DB_PATH
+from ..config import DB_PATH, STORE_ID
 from ..services import mealme_api
 from ..services import kroger_api
 import json
@@ -13,8 +13,6 @@ items_bp = Blueprint('items', __name__)
 @items_bp.route("/", methods=["GET"])
 def get_items():
     userId = request.headers.get("userId")
-    firstLoad = int(request.headers.get("firstLoad"))
-    print(firstLoad)
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -25,23 +23,22 @@ def get_items():
     ]
     conn.close()
 
-    if firstLoad:
-        for item in items:
-            token = kroger_api.getToken()
-            product_data = kroger_api.getProduct(item["name"], '61500122', token)
+    for item in items:
+        token = kroger_api.getToken()
+        product_data = kroger_api.getProduct(item["name"], STORE_ID, token)
 
-            products = []
-            for product in product_data['data']:
-                info = {
-                    'description': product['description'],
-                    'price': product['items'][0]['price']['regular'],
-                    'images': product['images'],
-                    'itemId': product['items'][0]['itemId']
-                }
-                products.append(info)
-            sorted_by_price = sorted(products, key=lambda x: x['price'])
-            item['price'] = sorted_by_price[0]['price']
-            item['name'] = sorted_by_price[0]['description']
+        products = []
+        for product in product_data['data']:
+            info = {
+                'description': product['description'],
+                'price': product['items'][0]['price']['regular'],
+                'images': product['images'],
+                'itemId': product['items'][0]['itemId']
+            }
+            products.append(info)
+        sorted_by_price = sorted(products, key=lambda x: x['price'])
+        item['price'] = sorted_by_price[0]['price']
+        item['name'] = sorted_by_price[0]['description']
 
     return jsonify(items)
 
@@ -51,23 +48,22 @@ def add_item():
     userId = request.headers.get("userId")
     data = request.json
 
-    # DONE Make call to prices API
     token = kroger_api.getToken()
 
     # location_ids = kroger_api.getLocations('63127', token) # 61500122
 
-    product_data = kroger_api.getProduct(data['name'], '61500122', token)
+    product_data = kroger_api.getProduct(data['name'], STORE_ID, token)
 
-    items = []
-    for item in product_data['data']:
+    products = []
+    for product in product_data['data']:
         info = {
-            'description': item['description'],
-            'price': item['items'][0]['price']['regular'],
-            'images': item['images'],
-            'itemId': item['items'][0]['itemId']
+            'description': product['description'],
+            'price': product['items'][0]['price']['regular'],
+            'images': product['images'],
+            'itemId': product['items'][0]['itemId']
         }
-        items.append(info)
-    sorted_by_price = sorted(items, key=lambda x: x['price'])
+        products.append(info)
+    sorted_by_price = sorted(products, key=lambda x: x['price'])
 
     # info = {
     #     # 'fulfillment': product_data['data'][0]['items'][0]['fulfillment'], # {"curbside": true, "delivery": true, "inStore": true, "shipToHome": false},

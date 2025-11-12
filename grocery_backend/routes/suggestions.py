@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, Blueprint, request
 import sqlite3
-from ..config import DB_PATH
+from ..config import DB_PATH, STORE_ID
 import statistics
 import json
 from ..services import kroger_api
@@ -13,9 +13,6 @@ def get_suggestions():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    #TODO: Update to fetch pricing on first load
-    # if firstLoad:
-    #     token = getToken()
 
     c.execute("""
         SELECT id, name, price, previous_purchased_prices
@@ -30,8 +27,24 @@ def get_suggestions():
 
     # Is current price lower than average?
     for item in suggested_list:
+        token = kroger_api.getToken()
+        product_data = kroger_api.getProduct(item['name'], STORE_ID, token)
+
+        products = []
+        for product in product_data['data']:
+            info = {
+                'description': product['description'],
+                'price': product['items'][0]['price']['regular'],
+                'images': product['images'],
+                'itemId': product['items'][0]['itemId']
+            }
+            products.append(info)
+        sorted_by_price = sorted(products, key=lambda x: x['price'])
+        item['price'] = sorted_by_price[0]['price']
+
         difference = 0
         previous_purchased_prices_string = item['previous_purchase_prices']
+
         try:
             previous_purchased_prices_list = json.loads(previous_purchased_prices_string)
             previous_purchased_prices = [float(s) for s in previous_purchased_prices_list]
@@ -41,9 +54,8 @@ def get_suggestions():
 
         if len(previous_purchased_prices) > 0:
             average_price = statistics.mean(previous_purchased_prices)
-            difference = average_price - float(item['price'])
+            difference = average_price - float(item['price']) 
         else:
-            # difference = previous_purchased_prices[0] - prices[0]
             print(previous_purchased_prices)
 
         if difference >= .25:
