@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, Blueprint
 import sqlite3
 from datetime import datetime
 from ..config import DB_PATH, STORE_ID
-from ..services import mealme_api
 from ..services import kroger_api
 import json
 
@@ -74,6 +73,7 @@ def add_item():
     #     # 'category': product_data['data'][0]['categories'][0],
     # }
 
+    #TODO: Refactor to return list of product options for selection
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 

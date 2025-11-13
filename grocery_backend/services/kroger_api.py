@@ -30,8 +30,8 @@ def getLocations(zipCode, token):
     filters = f'filter.zipCode.near={zipCode}&filter.radiusInMiles=100'
     headers = {'Accept': 'application/json', 'Authorization': f'Bearer {token}'}
     response = requests.get(KROGER_API_BASE_URL + '/locations?' + filters, headers=headers)
-    location_data = response.json()
-    locations_list = location_data['data']
-    location_ids = [location['locationId'] for location in locations_list]
+    locations_data = response.json()
+    # locations_list = location_data['data']
+    # location_ids = [location['locationId'] for location in locations_list]
 
-    return location_ids
+    return locations_data
