@@ -9,8 +9,9 @@ locations_bp = Blueprint('locations', __name__)
 
 @locations_bp.route("/", methods=["GET"])
 def getNearbyLocations():
+    zipCode = request.headers.get('zipCode')
     token = kroger_api.getToken()
-    locations_data = kroger_api.getLocations(63127, token)
+    locations_data = kroger_api.getLocations(zipCode, token)
 
     locations = []
     for location in locations_data['data']:

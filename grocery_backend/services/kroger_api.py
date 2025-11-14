@@ -27,7 +27,7 @@ def getProduct(product, locationId, token):
     return product_data
 
 def getLocations(zipCode, token):
-    filters = f'filter.zipCode.near={zipCode}&filter.radiusInMiles=100'
+    filters = f'filter.zipCode.near={zipCode}&filter.radiusInMiles=25'
     headers = {'Accept': 'application/json', 'Authorization': f'Bearer {token}'}
     response = requests.get(KROGER_API_BASE_URL + '/locations?' + filters, headers=headers)
     locations_data = response.json()

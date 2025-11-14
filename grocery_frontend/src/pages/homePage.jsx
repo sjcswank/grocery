@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Check } from 'lucide-react';
+import { Plus, X, Check, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Modal from '../modal';
+import '../modal.css'
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -12,23 +14,26 @@ function HomePage() {
     const [suggestionsList, setSuggestionsList] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [zipcode, setZipcode] = useState('');
+    const [locations, setLocations] = useState([]);
+    const [currentStore, setCurrentStore] = useState({});
     setError(null);
 
     // Fetch data on component mount
     useEffect(() => {
         //TODO: Refactor so Loading displays while fetching data on first load
-        setLoading(true);
         try {
             fetchData('items');
             fetchData('previous');
             fetchData('suggestions');
         }
         catch (err) {}
-        finally { setLoading(false); }   
     }, []);
 
 
     const fetchData = async (endPoint) => {
+        setLoading(true);
         try {           
             const response = await fetch(`${API_URL}/${endPoint}`, {
                 method: 'GET',
@@ -56,6 +61,7 @@ function HomePage() {
         }
         finally {
             setInputValue('');
+            setLoading(false);
         }
     }
 
@@ -135,6 +141,32 @@ function HomePage() {
     setLoading(false);
   };
 
+  const getStores = async (zipcode) => {
+    setLocations([]);
+    try {
+        const response = await fetch(`${API_URL}/locations`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'zipCode': zipcode }
+        });
+        if(!response.ok) throw new Error('Failed to fetch locations');
+        const list = await response.json();
+        setLocations(list);
+    } 
+    catch (err) { }
+    finally { setZipcode(''); }
+  }
+
+  const closeModal = () => {
+    setCurrentStore({});
+    setIsModalOpen(false);
+  }
+
+  const confirmLocation = () => {
+    setLocations([]);
+    setZipcode('');
+    setIsModalOpen(false);
+  }
+
   if (!isAuthenticated) {
     setError('You must be logged in to see this page.')
     return (
@@ -149,7 +181,8 @@ function HomePage() {
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg mb-6">
               Loading...
             </div>
-            ) : (<div>
+            ) : (
+            <div>    
             <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
                 <div className="flex gap-2">
                     <input
@@ -170,6 +203,74 @@ function HomePage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+                <div className="flex gap-2">
+                {Object.keys(currentStore).length === 0 ? (<p className='flex-1'>Please Select a Store</p>) : (
+                    <h2 className="flex-1 text-lg font-medium text-neutral-700 mb-4">{currentStore.name}<br />
+                    <span className='text-sm'>{currentStore.address.addressLine1}, {currentStore.address.city}, {currentStore.address.state}</span></h2>
+                )}
+            <button className='h-10 px-4 py-2 bg-neutral-800 text-white rounded-md hover:bg-neutral-700 transition-colors' onClick={() => setIsModalOpen(true)}>
+                Select Store
+            </button>
+            <Modal 
+                isOpen={isModalOpen} 
+                onClose={() => closeModal()} 
+                title="Select Store"
+                closeText="Select Store"
+                onConfirm={() => confirmLocation()}>
+                <p>Search by Zipcode.</p>
+                <div className="flex py-2 m-2">
+                    <input
+                        type="text"
+                        value={zipcode}
+                        onChange={(e) => setZipcode(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && getStores(zipcode)}
+                        placeholder="Enter zipcode..."
+                        className="flex-1 px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-400"
+                    />
+                    <button
+                        onClick={() => getStores(zipcode)}
+                        className="px-4 py-2 bg-neutral-800 text-white rounded-md hover:bg-neutral-700 transition-colors"
+                    >
+                        <Search size={20} />
+                    </button>
+                </div>
+                <div className='py-3'>
+                    {locations.length === 0 ? (
+                        <p className="text-neutral-400 text-center py-8">No locations. Please enter a zipcode.</p>
+                    ) : (
+                        <div class="space-y-4">
+                        {locations.map(location => {
+                            return (
+  
+                                <div 
+                                    class="cursor-pointer bg-neutral-100 hover:bg-neutral-200 p-4 rounded shadow transition duration-150 ease-in-out"
+                                    onClick={() => setCurrentStore(location)}
+                                >
+                                    
+                                    <div class="flex items-center gap-4 mb-4">
+                                    
+                                        <div class="grow text-left">
+                                            {location.name}
+                                        </div>
+
+                                        <div class="w-40 flex items-center justify-center text-sm font-medium text-neutral-700 shrink-0">
+                                            {location.phone}
+                                        </div>
+                                    </div>
+
+                                    <div class="w-full text-left text-sm text-neutral-700">
+                                        {location.address.addressLine1}, {location.address.city}, {location.address.state}
+                                    </div>
+                                    
+                                </div>
+
+                            )
+                        })}
+                        </div>
+                    )}
+                </div>
+            </Modal>
+            </div>
                 <h2 className="text-lg font-medium text-neutral-700 mb-4">Current List</h2>
                 {currentList.length === 0 ? (
                 <p className="text-neutral-400 text-center py-8">No items yet. Add some items to get started!</p>

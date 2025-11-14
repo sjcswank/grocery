@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import SignupPage from './pages/signupPage';
 import HomePage from './pages/homePage';
 import LoginPage from './pages/loginPage';
@@ -20,7 +20,6 @@ export default function GroceryListApp() {
 
 
   return (
-    // <Router>
       <div className="min-h-screen bg-neutral-50 p-4 sm:p-8">
       <div className="flex max-w-2xl mx-auto p-4 mb-6">
         <div className="w-1/2">
@@ -62,6 +61,5 @@ export default function GroceryListApp() {
           
         </div>
       </div>
-    // </Router>
   );
 }
