@@ -9,6 +9,7 @@ This is a simple app for creating and updating a grocery list. The app began as 
 - [X] Add API calls to find item pricing and other info [(11/8/2025)](https://github.com/sjcswank/grocery/commit/154ec20c4b622508ea5e1e6385c45176e43138b8)
 - [X] Update suggestions to include previous items with lower than usual prices (track previous prices when purchased) [(11/11/2025)](https://github.com/sjcswank/grocery/commit/7856cbffaf53737dfbe942c888d6684d4d65b420)
 - [X] Add ability to search for and select a nearby store [Route: (11/13/2025)](https://github.com/sjcswank/grocery/commit/88478c5a70bf1c7766342445a0a10f4c34187bcd) [Modal: (11/13/2025)](https://github.com/sjcswank/grocery/commit/bf3ed1ee18533b31e80403406518fbad96197558)
+- [ ] Add ability to detect store from current items
 - [ ] Add ability to select from a list of matching products at a given store
 - [ ] Add ability to search a set of stores for a specific product with current prices
 - [ ] Add ability to display price comparisons from several stores
@@ -33,4 +34,4 @@ This is a simple app for creating and updating a grocery list. The app began as 
 - [Tailwind CSS](https://v2.tailwindcss.com/docs)
 - [Kroger API](https://developer.kroger.com/documentation)
 
-*Developed with assistance from [Claude AI](https://claude.ai/)*
+*Developed with assistance from [Claude AI](https://claude.ai/) and [Claude Code](https://claude.com/product/claude-code)*
