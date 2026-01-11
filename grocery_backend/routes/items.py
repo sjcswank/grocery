@@ -22,23 +22,6 @@ def get_items():
     ]
     conn.close()
 
-    for item in items:
-        token = kroger_api.getToken()
-        product_data = kroger_api.getProduct(item["name"], STORE_ID, token)
-
-        products = []
-        for product in product_data['data']:
-            info = {
-                'description': product['description'],
-                'price': product['items'][0]['price']['regular'],
-                'images': product['images'],
-                'itemId': product['items'][0]['itemId']
-            }
-            products.append(info)
-        sorted_by_price = sorted(products, key=lambda x: x['price'])
-        item['price'] = sorted_by_price[0]['price']
-        item['name'] = sorted_by_price[0]['description']
-
     return jsonify(items)
 
 

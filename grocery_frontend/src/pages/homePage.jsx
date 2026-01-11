@@ -81,7 +81,6 @@ function HomePage() {
                 //DONE: Add item to current list
                 const item = await response.json();
                 setCurrentList(currentItems => [...currentItems, item]);
-                fetchData('suggestions');
             } catch (err) {
                 setError('Failed to add item');
             }
@@ -132,7 +131,6 @@ function HomePage() {
       
       if (!response.ok) throw new Error('Failed to delete item');
       fetchData('previous');
-      fetchData('suggestions');
     } catch (err) {
         // Revert on error
         setCurrentList([...currentList, item]);
